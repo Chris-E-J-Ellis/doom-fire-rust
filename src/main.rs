@@ -1,36 +1,31 @@
 mod doom_fire;
 
-fn main() -> Result<(), String> {
-    use device_query::{DeviceQuery, DeviceState, Keycode};
-    use doom_fire::console_fire_renderer as cfr;
-    use doom_fire::fire_engine as fe; // This might be a crazy rename?
-    use doom_fire::sdl_fire_renderer as sfr;
+use device_query::{DeviceQuery, DeviceState, Keycode};
+use doom_fire::console_fire_renderer as cfr;
+use doom_fire::fire_engine as fe;
+use doom_fire::sdl_fire_renderer as sfr;
 
-    // Is this stuff a crazy way to handle arguments and errors?
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() < 3 {
-        return print_help_with_error("Insufficient arguments specified.");
+enum Renderer {
+    Sdl,
+    Console,
+}
+
+fn main() -> Result<(), String> {
+    if std::env::args().len() < 3 {
+        print_help();
+        return Err(String::from("Insufficient arguments specified."));
     }
 
-    let width: usize = match (&args[1]).parse() {
-        Ok(val) => val,
-        Err(_) => return print_help_with_error("Invalid WIDTH specified"),
+    let width: usize = get_arg_or_print_help(1, "Invalid WIDTH specified")?;
+    let height: usize = get_arg_or_print_help(2, "Invalid HEIGHT specified")?;
+
+    let sleep_in_milliseconds = if std::env::args().len() >= 4 {
+        get_arg_or_print_help(3, "Invalid sleep duration specified")?
+    } else {
+        10 // Default sleep duration
     };
 
-    let height: usize = match (&args[2]).parse() {
-        Ok(val) => val,
-        Err(_) => return print_help_with_error("Invalid HEIGHT specified"),
-    };
-
-    let sleep_in_milliseconds = match args.len() >= 4 {
-        true => match (&args[3]).parse::<u64>() {
-            Ok(val) => val,
-            Err(_) => return print_help_with_error("Invalid sleep duration specified"),
-        },
-        false => 16, // default_sleep
-    };
-
-    let render_type: Renderer = if (args.len() >= 5) && (&args[4] == "-c") {
+    let render_type = if std::env::args().len() >= 5 && std::env::args().nth(4).unwrap() == "-c" {
         Renderer::Console
     } else {
         Renderer::Sdl
@@ -45,22 +40,21 @@ fn main() -> Result<(), String> {
         buffer: &mut buffer,
     };
     // Is this a nuts way of using traits? sort of in an interface headspace currently.
-    // Could I make these live on the stack? I haven't really eaten docs around this yet =D 
+    // Could I make these live on the stack? I haven't really eaten docs around this yet =D
     let mut renderer: Box<dyn fe::FireRenderer> = match render_type {
         Renderer::Sdl => Box::new(sfr::SdlFireRenderer::new(width as u32, height as u32)),
         Renderer::Console => Box::new(cfr::ConsoleFireRenderer {}),
     };
     renderer.initialise();
 
-    // Here I'm playing with different ways of calling methods on things
     let max_ignition_value = doom_fire::fire_palette::MAX_PALETTE_ENTRIES as i32 - 1;
-    fe::initialise_buffer(&mut fire_buffer, max_ignition_value);
+    fire_buffer.initialise_buffer(max_ignition_value);
 
     let device_state = DeviceState::new();
     let mut exit_requested = false;
     loop {
         renderer.render(&fire_buffer);
-        fe::step_fire(&mut fire_buffer);
+        fire_buffer.step_fire();
 
         let keys = device_state.get_keys();
         if keys.contains(&Keycode::Escape) {
@@ -80,15 +74,19 @@ fn main() -> Result<(), String> {
     return Ok(());
 }
 
-enum Renderer {
-    Sdl,
-    Console,
+fn get_arg_or_print_help<T: std::str::FromStr>(position: usize, msg: &str) -> Result<T, String> {
+    match std::env::args().nth(position).unwrap().parse::<T>() {
+        Ok(value) => return Ok(value),
+        Err(_) => {
+            print_help();
+            return Err(String::from(msg));
+        }
+    };
 }
 
-fn print_help_with_error(message: &str) -> Result<(), String> {
+fn print_help() {
     println!("Usage: doom-fire WIDTH HEIGHT [SLEEP] [RENDERER]");
     println!("       SLEEP    - Render loop delay in ms");
     println!("       RENDERER - Enable console renderer with '-c'");
     println!();
-    Err(String::from(message))
 }

@@ -15,40 +15,35 @@ pub trait FireRenderer {
     }
 }
 
-// I could implement all these methods on FireBuffer, but that seems weird?
-// Should there be an empty "FireEngine" that contains these methods?
-// How would they be better grouped/encapsulated? Maybe the module is fine.
-pub fn initialise_buffer(buffer: &mut FireBuffer, ignition_value: i32) {
-    let final_row_index = buffer.width * (buffer.height - 1);
-    for i in final_row_index..buffer.buffer.len() {
-        buffer.buffer[i] = ignition_value;
-    }
-}
-
-pub fn step_fire(buffer: &mut FireBuffer) {
-    for x in 0..buffer.width {
-        for y in 1..buffer.height {
-            let current_position = (y * buffer.width) + x;
-            spread_fire(buffer, current_position);
+impl<'a> FireBuffer<'a> {
+    pub fn initialise_buffer(&mut self, ignition_value: i32) {
+        let final_row_index = self.width * (self.height - 1);
+        for i in final_row_index..self.buffer.len() {
+            self.buffer[i] = ignition_value;
         }
     }
-}
 
-// Is the checked sub an expected thing to do here? I could not use usize and just
-// check to see if I'm a valid index.
-fn spread_fire(buffer: &mut FireBuffer, source_position: usize) {
-    let pixel = buffer.buffer[source_position];
-
-    if pixel <= 0 {
-        buffer.buffer[source_position - buffer.width] = 0;
-    } else {
-        let decay = random::<usize>() % 3; // This is usually and '&', but I prefer the reduced decay from mod.
-        let destination_position = (source_position - buffer.width + 1).checked_sub(decay);
-        if destination_position == None {
-            return;
+    pub fn step_fire(&mut self) {
+        for x in 0..self.width {
+            for y in 1..self.height {
+                let current_position = (y * self.width) + x;
+                self.spread_fire(current_position);
+            }
         }
+    }
 
-        buffer.buffer[destination_position.unwrap()] = pixel - (decay as i32 & 1)
+    fn spread_fire(&mut self, source_position: usize) {
+        let pixel = self.buffer[source_position];
+
+        if pixel <= 0 {
+            self.buffer[source_position - self.width] = 0;
+        } else {
+            let decay = random::<usize>() % 3; // This is usually and '&', but I prefer the reduced decay from mod.
+
+            if let Some(destination_position) = (source_position - self.width + 1).checked_sub(decay) {
+                self.buffer[destination_position] = pixel - (decay as i32 & 1);
+            }
+        }
     }
 }
 
@@ -67,7 +62,7 @@ mod fire_engine_tests {
             buffer: &mut buffer,
         };
         let ignition_value = 5;
-        fe::initialise_buffer(&mut fire_buffer, ignition_value);
+        fire_buffer.initialise_buffer(ignition_value);
         let expected_buffer = [
             0,
             0,

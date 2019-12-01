@@ -10,7 +10,7 @@ pub struct SdlFireRenderer {
     canvas: Canvas<Window>,
     back_buffer: Vec<u8>,
     bytes_per_pixel: usize,
-    texture_creator: sdl2::render::TextureCreator<sdl2::video::WindowContext>
+    texture_creator: sdl2::render::TextureCreator<sdl2::video::WindowContext>,
 }
 
 impl super::fire_engine::FireRenderer for SdlFireRenderer {
@@ -50,7 +50,7 @@ impl SdlFireRenderer {
             canvas,
             back_buffer,
             bytes_per_pixel,
-            texture_creator
+            texture_creator,
         }
     }
 
@@ -62,7 +62,8 @@ impl SdlFireRenderer {
     pub fn render(&mut self, buffer: &FireBuffer) {
         // I'm going to move all this out to the SdlFireRenderer struct, for an exercise, but I think there's
         // some lifetime or RC stuff to read and understand before playing with that.
-        let mut texture = self.texture_creator
+        let mut texture = self
+            .texture_creator
             .create_texture(
                 None,
                 TextureAccess::Static,
@@ -104,13 +105,11 @@ impl SdlFireRenderer {
             if let sdl2::event::Event::Quit { .. } = event {
                 exit_requested = true;
             }
-            // As an aside, I was looking at intercepting resize events.
-            // This statement seemed unwilling to combine. 
-            /*if let sdl2::event::Event::Window{ win_event, .. } = event {
-                if let sdl2::event::WindowEvent::Resized(width, height) = win_event{
-
-                }
-            }*/
+            /*if let sdl2::event::Event::Window {
+                win_event: sdl2::event::WindowEvent::Resized(width, height),
+                ..
+            } = event
+            {}*/
         }
         return exit_requested;
     }
