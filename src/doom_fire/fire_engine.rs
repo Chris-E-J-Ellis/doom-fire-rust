@@ -1,9 +1,9 @@
 use rand::random;
 
-pub struct FireBuffer<'a> {
+pub struct FireBuffer {
     pub height: usize,
     pub width: usize,
-    pub buffer: &'a mut [i32],
+    pub buffer: Vec<i32>,
 }
 
 pub trait FireRenderer {
@@ -15,7 +15,7 @@ pub trait FireRenderer {
     }
 }
 
-impl<'a> FireBuffer<'a> {
+impl FireBuffer {
     pub fn initialise_buffer(&mut self, ignition_value: i32) {
         let final_row_index = self.width * (self.height - 1);
         for i in final_row_index..self.buffer.len() {
@@ -59,7 +59,7 @@ mod fire_engine_tests {
         let mut fire_buffer = fe::FireBuffer {
             height: height,
             width: width,
-            buffer: &mut buffer,
+            buffer: buffer,
         };
         let ignition_value = 5;
         fire_buffer.initialise_buffer(ignition_value);

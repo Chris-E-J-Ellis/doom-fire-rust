@@ -31,13 +31,11 @@ fn main() -> Result<(), String> {
         Renderer::Sdl
     };
 
-    // I could make the FireBuffer take a Vec, and not bother with slices, is that more idiomatic?
-    // Sort of playing with lifetimes.
-    let mut buffer: Vec<i32> = vec![0; (width * height) as usize];
+    let buffer: Vec<i32> = vec![0; width * height];
     let mut fire_buffer = fe::FireBuffer {
         height: height,
         width: width,
-        buffer: &mut buffer,
+        buffer: buffer,
     };
     // Is this a nuts way of using traits? sort of in an interface headspace currently.
     // Could I make these live on the stack? I haven't really eaten docs around this yet =D
