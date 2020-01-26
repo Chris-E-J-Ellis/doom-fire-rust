@@ -5,6 +5,7 @@ use doom_fire::console_fire_renderer as cfr;
 use doom_fire::fire_engine as fe;
 use doom_fire::sdl_fire_renderer as sfr;
 
+const DEFAULT_SLEEP_DURATION: u64 = 10;
 enum Renderer {
     Sdl,
     Console,
@@ -19,10 +20,9 @@ fn main() -> Result<(), String> {
     let width: usize = get_arg_or_print_help(1, "Invalid WIDTH specified")?;
     let height: usize = get_arg_or_print_help(2, "Invalid HEIGHT specified")?;
 
-    let sleep_in_milliseconds = if std::env::args().len() >= 4 {
-        get_arg_or_print_help(3, "Invalid sleep duration specified")?
-    } else {
-        10 // Default sleep duration
+    let sleep_in_milliseconds = match std::env::args().len() {
+        4 => get_arg_or_print_help(3, "Invalid sleep duration specified")?,
+        _ => DEFAULT_SLEEP_DURATION,
     };
 
     let render_type = if std::env::args().len() >= 5 && std::env::args().nth(4).unwrap() == "-c" {
@@ -37,13 +37,11 @@ fn main() -> Result<(), String> {
         width: width,
         buffer: buffer,
     };
-    // Is this a nuts way of using traits? sort of in an interface headspace currently.
-    // Could I make these live on the stack? I haven't really eaten docs around this yet =D
+
     let mut renderer: Box<dyn fe::FireRenderer> = match render_type {
         Renderer::Sdl => Box::new(sfr::SdlFireRenderer::new(width as u32, height as u32)),
-        Renderer::Console => Box::new(cfr::ConsoleFireRenderer {}),
+        Renderer::Console => Box::new(cfr::ConsoleFireRenderer::new()),
     };
-    renderer.initialise();
 
     let max_ignition_value = doom_fire::fire_palette::MAX_PALETTE_ENTRIES as i32 - 1;
     fire_buffer.initialise_buffer(max_ignition_value);
@@ -62,7 +60,6 @@ fn main() -> Result<(), String> {
         exit_requested |= renderer.poll_for_exit();
 
         if exit_requested {
-            renderer.cleanup();
             break;
         }
 

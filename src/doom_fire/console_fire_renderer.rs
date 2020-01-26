@@ -5,28 +5,28 @@ use crossterm::{
     style::{Color, ResetColor, SetBackgroundColor},
     terminal, QueueableCommand,
 };
-use std::{
-    io::{stdout, Write}
-};
+use std::io::{stdout, Write};
 
 pub struct ConsoleFireRenderer;
 
 impl super::fire_engine::FireRenderer for ConsoleFireRenderer {
-    fn initialise(&mut self){
-    }
     fn render(&mut self, buffer: &FireBuffer) {
         ConsoleFireRenderer::render(buffer)
     }
-    fn cleanup(&self) {
-        ConsoleFireRenderer::cleanup()
+}
+
+impl Drop for ConsoleFireRenderer {
+    fn drop(&mut self) {
+        ConsoleFireRenderer::reset();
     }
 }
 
 impl ConsoleFireRenderer {
+    pub fn new() -> ConsoleFireRenderer { ConsoleFireRenderer {} }
     pub fn render(buffer: &FireBuffer) {
         print!("\n{}", SetBackgroundColor(Color::Reset));
         let mut stdout = stdout();
-        //stdout.queue(terminal::Clear(terminal::ClearType::All)).unwrap();
+        //stdout.queue(terminal::Clear(terminal::ClearType::All)).unwrap(); // Alternate clear
         stdout.queue(cursor::MoveTo(0, 0)).unwrap();
 
         for x in 0..buffer.buffer.len() as usize {
@@ -47,7 +47,7 @@ impl ConsoleFireRenderer {
         stdout.flush().unwrap();
     }
 
-    pub fn cleanup() {
+    pub fn reset() {
         let mut stdout = stdout();
         stdout.queue(ResetColor).unwrap();
         stdout.queue(cursor::MoveTo(0, 0)).unwrap();

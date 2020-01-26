@@ -14,14 +14,8 @@ pub struct SdlFireRenderer {
 }
 
 impl super::fire_engine::FireRenderer for SdlFireRenderer {
-    fn initialise(&mut self) {
-        SdlFireRenderer::initialise(self)
-    }
     fn render(&mut self, buffer: &FireBuffer) {
         SdlFireRenderer::render(self, buffer)
-    }
-    fn cleanup(&self) {
-        SdlFireRenderer::cleanup()
     }
     fn poll_for_exit(&self) -> bool {
         SdlFireRenderer::poll_for_exit(self)
@@ -40,7 +34,9 @@ impl SdlFireRenderer {
             .build()
             .unwrap();
 
-        let canvas = window.into_canvas().build().unwrap();
+        let mut canvas = window.into_canvas().build().unwrap();
+        canvas.clear();
+        canvas.present();
         let bytes_per_pixel: usize = 4;
         let back_buffer = vec![0; (width * height) as usize * bytes_per_pixel];
         let texture_creator = canvas.texture_creator();
@@ -52,11 +48,6 @@ impl SdlFireRenderer {
             bytes_per_pixel,
             texture_creator,
         }
-    }
-
-    fn initialise(&mut self) {
-        self.canvas.clear();
-        self.canvas.present();
     }
 
     pub fn render(&mut self, buffer: &FireBuffer) {
@@ -92,10 +83,6 @@ impl SdlFireRenderer {
             .unwrap();
         self.canvas.copy(&texture, None, None).unwrap();
         self.canvas.present();
-    }
-
-    pub fn cleanup() {
-        // I guess this is just safe to let die =O
     }
 
     pub fn poll_for_exit(&self) -> bool {

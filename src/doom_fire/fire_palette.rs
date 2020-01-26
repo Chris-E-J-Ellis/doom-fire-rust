@@ -1,4 +1,3 @@
-// Would having some static data in a file like this make you weep?
 #[rustfmt::skip] 
 pub const MAX_PALETTE_ENTRIES: usize = 37;
 

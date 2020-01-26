@@ -7,9 +7,7 @@ pub struct FireBuffer {
 }
 
 pub trait FireRenderer {
-    fn initialise(&mut self);
     fn render(&mut self, _buffer: &FireBuffer);
-    fn cleanup(&self);
     fn poll_for_exit(&self) -> bool {
         return false;
     }
@@ -40,7 +38,9 @@ impl FireBuffer {
         } else {
             let decay = random::<usize>() % 3; // This is usually and '&', but I prefer the reduced decay from mod.
 
-            if let Some(destination_position) = (source_position - self.width + 1).checked_sub(decay) {
+            if let Some(destination_position) =
+                (source_position - self.width + 1).checked_sub(decay)
+            {
                 self.buffer[destination_position] = pixel - (decay as i32 & 1);
             }
         }
