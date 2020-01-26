@@ -6,9 +6,25 @@ use doom_fire::fire_engine as fe;
 use doom_fire::sdl_fire_renderer as sfr;
 
 const DEFAULT_SLEEP_DURATION: u64 = 10;
-enum Renderer {
-    Sdl,
-    Console,
+
+enum BeefyRenderer {
+    Sdl(sfr::SdlFireRenderer),
+    Console(cfr::ConsoleFireRenderer),
+}
+
+impl fe::FireRenderer for BeefyRenderer {
+    fn render(&mut self, buffer: &fe::FireBuffer) {
+        match self {
+            BeefyRenderer::Sdl(r) => r.render(buffer),
+            BeefyRenderer::Console(r) => r.render(buffer),
+        }
+    }
+    fn poll_for_exit(&self) -> bool {
+        match self {
+            BeefyRenderer::Sdl(r) => r.poll_for_exit(),
+            BeefyRenderer::Console(_) => false 
+        }
+    }
 }
 
 fn main() -> Result<(), String> {
@@ -25,12 +41,6 @@ fn main() -> Result<(), String> {
         _ => DEFAULT_SLEEP_DURATION,
     };
 
-    let render_type = if std::env::args().len() >= 5 && std::env::args().nth(4).unwrap() == "-c" {
-        Renderer::Console
-    } else {
-        Renderer::Sdl
-    };
-
     let buffer: Vec<i32> = vec![0; width * height];
     let mut fire_buffer = fe::FireBuffer {
         height: height,
@@ -38,10 +48,9 @@ fn main() -> Result<(), String> {
         buffer: buffer,
     };
 
-    let mut renderer: Box<dyn fe::FireRenderer> = match render_type {
-        Renderer::Sdl => Box::new(sfr::SdlFireRenderer::new(width as u32, height as u32)),
-        Renderer::Console => Box::new(cfr::ConsoleFireRenderer::new()),
-    };
+    let mut sdl_renderer = BeefyRenderer::Sdl(sfr::SdlFireRenderer::new(width as u32, height as u32));
+    let mut _console_fire_renderer = &mut BeefyRenderer::Console(cfr::ConsoleFireRenderer::new());
+    let renderer : &mut dyn fe::FireRenderer = &mut sdl_renderer; 
 
     let max_ignition_value = doom_fire::fire_palette::MAX_PALETTE_ENTRIES as i32 - 1;
     fire_buffer.initialise_buffer(max_ignition_value);

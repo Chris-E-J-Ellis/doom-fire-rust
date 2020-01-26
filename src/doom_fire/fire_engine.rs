@@ -7,7 +7,7 @@ pub struct FireBuffer {
 }
 
 pub trait FireRenderer {
-    fn render(&mut self, _buffer: &FireBuffer);
+    fn render(&mut self, buffer: &FireBuffer);
     fn poll_for_exit(&self) -> bool {
         return false;
     }
