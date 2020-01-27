@@ -1,8 +1,8 @@
 use rand::random;
 
 pub struct FireBuffer {
-    pub height: usize,
     pub width: usize,
+    pub height: usize,
     pub buffer: Vec<i32>,
 }
 
@@ -14,6 +14,15 @@ pub trait FireRenderer {
 }
 
 impl FireBuffer {
+    pub fn from_width_and_height(width: usize, height: usize) -> Self {
+        let buffer: Vec<i32> = vec![0; width * height];
+        return FireBuffer {
+            width: width,
+            height: height,
+            buffer: buffer,
+        };
+    }
+
     pub fn initialise_buffer(&mut self, ignition_value: i32) {
         let final_row_index = self.width * (self.height - 1);
         for i in final_row_index..self.buffer.len() {

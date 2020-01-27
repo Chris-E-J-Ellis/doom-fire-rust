@@ -31,12 +31,7 @@ fn main() -> Result<(), String> {
         Renderer::Sdl
     };
 
-    let buffer: Vec<i32> = vec![0; width * height];
-    let mut fire_buffer = fe::FireBuffer {
-        height: height,
-        width: width,
-        buffer: buffer,
-    };
+    let mut fire_buffer = fe::FireBuffer::from_width_and_height(width, height);
 
     let mut renderer: Box<dyn fe::FireRenderer> = match render_type {
         Renderer::Sdl => Box::new(sfr::SdlFireRenderer::new(width as u32, height as u32)),
